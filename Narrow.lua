@@ -33,3 +33,7 @@ function Narrow:updateGradInput(input, gradOutput)
    self.gradInput:narrow(dim,self.index,length):copy(gradOutput)
    return self.gradInput
 end
+
+function Narrow:__tostring__()
+   return string.format('%s(%d, %d, %d)', torch.type(self), self.dimension, self.index, self.length)
+end

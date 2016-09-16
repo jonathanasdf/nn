@@ -1,9 +1,10 @@
 local CrossEntropyCriterion, Criterion = torch.class('nn.CrossEntropyCriterion', 'nn.Criterion')
 
-function CrossEntropyCriterion:__init(weights)
+function CrossEntropyCriterion:__init(weights, sizeAverage)
    Criterion.__init(self)
    self.lsm = nn.LogSoftMax()
-   self.nll = nn.ClassNLLCriterion(weights)
+   self.nll = nn.ClassNLLCriterion(weights, sizeAverage)
+   self.sizeAverage = self.nll.sizeAverage
 end
 
 function CrossEntropyCriterion:updateOutput(input, target)
