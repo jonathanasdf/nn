@@ -1,15 +1,10 @@
 local SoftCrossEntropyCriterion, parent = torch.class('nn.SoftCrossEntropyCriterion', 'nn.Criterion')
 
--- Input: Logits. Calculates cross entropy loss L=-sum(sm(target, T) log sm(inputs, T))
--- where sm(z, T) = exp(z/T) / sum(exp(z/T))
-function SoftCrossEntropyCriterion:__init(temperature, sizeAverage)
+function SoftCrossEntropyCriterion:__init(T, weights, sizeAverage)
   parent.__init(self)
-  self.temperature = temperature
-  if sizeAverage ~= nil then
-    self.sizeAverage = sizeAverage
-  else
-    self.sizeAverage = true
-  end
+  self.T = T
+  self.criterion = nn.CrossEntropyCriterion(weights, sizeAverage)
+  self.sizeAverage = self.criterion.sizeAverage
 end
 
 local function sm(input)
@@ -23,40 +18,15 @@ local function sm(input)
 end
 
 function SoftCrossEntropyCriterion:updateOutput(input, target)
-  input = input / self.temperature
-  target = target / self.temperature
-
-  if input:dim() == 1 then
-    self.output = -torch.dot(sm(target), input - math.log(torch.exp(input):sum()))
-  elseif input:dim() == 2 then
-    self.output = -(torch.cmul(sm(target), input - torch.exp(input):sum(2):log():expandAs(input)):sum(2)):sum()
-    if self.sizeAverage then
-      self.output = self.output / input:size(1)
-    end
-  else
-    error('matrix or vector expected. input size: ' .. tostring(input:size()))
-  end
+  self.criterion:updateOutput(input / self.T, target)
+  self.output = self.criterion.output
   return self.output
 end
 
 function SoftCrossEntropyCriterion:updateGradInput(input, target)
-  self.gradInput:resizeAs(input)
-
-  input = input / self.temperature
-  target = target / self.temperature
-
-  local y = sm(target)
-  if input:dim() == 1 then
-    self.gradInput:viewAs((sm(input) * y:sum() - y) / self.temperature, self.gradInput)
-  elseif input:dim() == 2 then
-    self.gradInput:viewAs((torch.cmul(sm(input), y:sum(2):expandAs(input)) - y) / self.temperature, self.gradInput)
-    if self.sizeAverage then
-      self.gradInput = self.gradInput / input:size(1)
-    end
-  else
-    error('matrix or vector expected. input size: ' .. tostring(input:size()))
-  end
-  return self.gradInput * self.temperature * self.temperature
+  self.criterion:updateGradInput(input / self.T, target)
+  self.gradInput = self.criterion.gradInput / self.T
+  return self.gradInput
 end
 
 return SoftCrossEntropyCriterion
