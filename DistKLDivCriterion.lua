@@ -1,8 +1,11 @@
 local DistKLDivCriterion, parent = torch.class('nn.DistKLDivCriterion', 'nn.Criterion')
 
-function DistKLDivCriterion:__init()
+function DistKLDivCriterion:__init(sizeAverage)
    parent.__init(self)
-   self.sizeAverage = true
+   if sizeAverage == nil then
+     sizeAverage = true
+   end
+   self.sizeAverage = sizeAverage
 end
 
 function DistKLDivCriterion:updateOutput(input, target)
