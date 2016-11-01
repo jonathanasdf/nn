@@ -152,7 +152,7 @@ require('nn.MapTable')
 
 require('nn.Criterion')
 require('nn.MSECriterion')
-require('nn.MSECovCriterion')
+require('nn.SquareMahalanobisCriterion')
 require('nn.SmoothL1Criterion')
 require('nn.MarginCriterion')
 require('nn.SoftMarginCriterion')
